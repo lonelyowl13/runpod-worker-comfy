@@ -23,6 +23,16 @@ COMFY_HOST = "127.0.0.1:8188"
 # see https://docs.runpod.io/docs/handler-additional-controls#refresh-worker
 REFRESH_WORKER = os.environ.get("REFRESH_WORKER", "false").lower() == "true"
 
+S3_REGION = os.environ.get("S3_REGION", None)
+
+
+def get_region(*args, **kwargs):
+    return S3_REGION
+
+
+#  this would allow to set s3 region manually
+rp_upload.extract_region_from_url = get_region
+
 
 def validate_input(job_input):
     """
@@ -122,7 +132,21 @@ def upload_images(images):
     for image in images:
         name = image["name"]
         image_data = image["image"]
-        blob = base64.b64decode(image_data)
+
+        if image_data.startswith("https://") or image_data.startswith("http://"):
+            # image is a link
+            response = requests.get(image_data)
+            if response.status_code == 200:
+                blob = response.content
+            else:
+                return {
+                    "status": "error",
+                    "message": "Failed to download the image " + image_data,
+                    "details": response.text,
+                }
+
+        else:
+            blob = base64.b64decode(image_data)
 
         # Prepare the form data
         files = {

@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     libgl1 \
+    libglib2.0-dev \
     && ln -sf /usr/bin/python3.10 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
@@ -41,15 +42,13 @@ ADD src/extra_model_paths.yaml ./
 # Go back to the root
 WORKDIR /
 
-# Add scripts
-ADD src/start.sh src/restore_snapshot.sh src/rp_handler.py test_input.json ./
-RUN chmod +x /start.sh /restore_snapshot.sh
-
-# Optionally copy the snapshot file
-ADD *snapshot*.json /
-
 # Restore the snapshot to install custom nodes
-RUN /restore_snapshot.sh
+ADD src/nodes-download.bash .
+RUN bash /nodes-download.bash
+
+# Add scripts
+ADD src/start.sh src/rp_handler.py test_input.json ./
+RUN chmod +x start.sh
 
 # Start container
 CMD ["/start.sh"]

@@ -1,6 +1,6 @@
 services:
   comfyui-worker:
-    image: timpietruskyblibla/runpod-worker-comfy:3.4.0-sdxl
+    image: lonelyowl13/runpod-worker-comfy:dev-base
     deploy:
       resources:
         reservations:
@@ -8,11 +8,13 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    environment:
-      - SERVE_API_LOCALLY=true
+    env_file: .env
+
     ports:
       - "8000:8000"
       - "8188:8188"
     volumes:
       - ./data/comfyui/output:/comfyui/output
       - ./data/runpod-volume:/runpod-volume
+
+# docker build -t <your_dockerhub_username>/runpod-worker-comfy:dev-base --target base --platform linux/amd64 .
